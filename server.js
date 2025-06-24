@@ -25,7 +25,7 @@ app.get('/scrape', async (req, res) => {
     // ✅ Set LinkedIn session cookie
     await page.setCookie({
       name: 'li_at',
-      value: 'AQEDAUL_NcsDuMptAAABl6NjSbMAAAGXx2_Ns00ACdfYEq3HVMX9Iogx3S2eR1GXyVp6Q05BQxRzNVEZUl2gbIu9gPm5ZFPPfIjKFM4w4W3yAVFPxQTrSftjVwJJeCh4wAwd7QbUmK5HigelEESQmnA8',
+      value: 'AQEDAUL_NcsFQD-4AAABl6OX8T4AAAGXx6R1PlYAELB0SraAeoKgeWyblyFs_XDSUplRX5KksQqvoODHK8F5Mpdi30qpDlK0g54evFDMVqcMLAhpjEhjLhqulzw-t4GGgx_jsJcOofwtrkfckENqWGga',
       domain: '.linkedin.com'
     });
 
