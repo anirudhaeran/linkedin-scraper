@@ -13,7 +13,7 @@ app.get('/scrape', async (req, res) => {
 
   await page.setCookie({
     name: 'li_at',
-    value: 'YOUR_LI_AT_COOKIE_HERE',
+    value: 'AQEDAUL_NcsDuMptAAABl6NjSbMAAAGXx2_Ns00ACdfYEq3HVMX9Iogx3S2eR1GXyVp6Q05BQxRzNVEZUl2gbIu9gPm5ZFPPfIjKFM4w4W3yAVFPxQTrSftjVwJJeCh4wAwd7QbUmK5HigelEESQmnA8',
     domain: '.linkedin.com'
   });
 
