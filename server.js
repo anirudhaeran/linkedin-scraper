@@ -55,6 +55,8 @@ app.get('/scrape', async (req, res) => {
     const currentUrl = await page.url();
     console.log(`✅ Page loaded: ${currentUrl}`);
 
+    await page.screenshot({ path: 'debug.png', fullPage: true });
+    
     // If redirected to login, throw error
     if (currentUrl.includes('/login') || currentUrl.includes('checkpoint')) {
       throw new Error('Invalid or expired li_at cookie. Redirected to login.');
