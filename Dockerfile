@@ -1,6 +1,6 @@
 FROM node:18-slim
 
-# Install missing libraries for Chromium to work properly
+# Install all required dependencies for Puppeteer to launch full Chromium
 RUN apt-get update && apt-get install -y \
     wget \
     ca-certificates \
@@ -20,6 +20,11 @@ RUN apt-get update && apt-get install -y \
     libxshmfence1 \
     libxkbcommon0 \
     libx11-xcb1 \
+    libxfixes3 \
+    libxrender1 \
+    libxext6 \
+    libx11-6 \
+    libx11-data \
     xdg-utils \
     --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
