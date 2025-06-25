@@ -31,7 +31,7 @@ app.get('/scrape', async (req, res) => {
     console.log(`🍪 Setting li_at cookie`);
     await page.setCookie({
       name: 'li_at',
-      value: 'AQEDAUL_NcsFKj0SAAABl6V-DTcAAAGXyYqRN1YAK2EJh-nOODPWLpavtnfxAnQ-AbbtIgWJnwpD9-KvdGip6L04FWWBSBIUIxN_7CgcGLgnuixI7DJt2kazcjn-RoCSJ21eznqLAnQHDW3_YbispDNe', // ← Replace this with your real cookie
+      value: 'AQEDAUL_NcsFKj0SAAABl6V-DTcAAAGXyYqRN1YAK2EJh-nOODPWLpavtnfxAnQ-AbbtIgWJnwpD9-KvdGip6L04FWWBSBIUIxN_7CgcGLgnuixI7DJt2kazcjn-RoCSJ21eznqLAnQHDW3_YbispDNe', // Replace with your real li_at
       domain: '.linkedin.com'
     });
 
@@ -44,25 +44,35 @@ app.get('/scrape', async (req, res) => {
     } catch (err) {
       const currentUrl = await page.url();
       console.error(`❌ Navigation error. Current URL: ${currentUrl}`);
+
+      // Always take screenshot even on failure
+      try {
+        await page.screenshot({ path: 'debug.png', fullPage: true });
+        console.log('📸 Screenshot captured for debugging.');
+      } catch (screenshotErr) {
+        console.error('⚠️ Screenshot failed:', screenshotErr.message);
+      }
+
       await browser.close();
-      return res.status(500).json({ error: 'Navigation failed', url: currentUrl });
+      return res.status(500).json({
+        error: 'Navigation failed. Screenshot captured.',
+        url: currentUrl
+      });
     }
 
     const currentUrl = await page.url();
     console.log(`✅ Page loaded: ${currentUrl}`);
 
-    // Screenshot only if redirected
     if (currentUrl.includes('/login') || currentUrl.includes('checkpoint')) {
-      console.warn('🔐 Redirected to login/checkpoint page. Taking screenshot for debug...');
       await page.screenshot({ path: 'debug.png', fullPage: true });
       await browser.close();
       return res.status(401).json({
-        error: 'Redirected to login. li_at may be expired or blocked.',
+        error: 'Redirected to login or checkpoint. Cookie may be expired.',
         url: currentUrl
       });
     }
 
-    // ✅ Page loaded successfully — add your scraping logic here
+    // Example dummy data – replace with actual scraping later
     const leads = [
       { name: 'John Doe', title: 'Marketing Manager', location: 'New York' },
       { name: 'Jane Smith', title: 'Digital Strategist', location: 'San Francisco' }
@@ -72,22 +82,21 @@ app.get('/scrape', async (req, res) => {
     res.json({ leads });
 
   } catch (err) {
-    console.error('❌ Scraping failed', err);
+    console.error('❌ Scraping failed:', err.message);
     res.status(500).json({ error: 'Scraping failed', details: err.message });
   }
 });
 
-// Debug route for screenshot
+// Route to serve debug screenshot
 app.get('/debug', (req, res) => {
-  const screenshotPath = __dirname + '/debug.png';
-  if (fs.existsSync(screenshotPath)) {
-    res.sendFile(screenshotPath);
+  const path = __dirname + '/debug.png';
+  if (fs.existsSync(path)) {
+    res.sendFile(path);
   } else {
-    res.status(404).send('❌ Screenshot not available. Make sure a screenshot was taken.');
+    res.status(404).send('❌ Screenshot not available. Run a scrape first.');
   }
 });
 
-// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Scraper API running on port ${PORT}`);
