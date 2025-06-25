@@ -1,5 +1,6 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
+const fs = require('fs');
 
 const app = express();
 
@@ -27,11 +28,10 @@ app.get('/scrape', async (req, res) => {
 
     const page = await browser.newPage();
 
-    // Set LinkedIn session cookie
     console.log(`🍪 Setting li_at cookie`);
     await page.setCookie({
       name: 'li_at',
-      value: 'AQEDAUL_NcsAxSlEAAABl6Vn7yUAAAGXyXRzJVYAUvC-SHfxBBsY1muPvTEgQP22d59VEzghmGYlcohl8HeqNXV5XGXsB9RxR-kN7rfd8g6ioPT7IF-q8_M9JvFasHIrX83AVHeJVo7cx7LB9-t5PU6A',
+      value: 'AQEDAUL_NcsFKj0SAAABl6V-DTcAAAGXyYqRN1YAK2EJh-nOODPWLpavtnfxAnQ-AbbtIgWJnwpD9-KvdGip6L04FWWBSBIUIxN_7CgcGLgnuixI7DJt2kazcjn-RoCSJ21eznqLAnQHDW3_YbispDNe', // ← Replace this with your real cookie
       domain: '.linkedin.com'
     });
 
@@ -43,21 +43,26 @@ app.get('/scrape', async (req, res) => {
       });
     } catch (err) {
       const currentUrl = await page.url();
-      await page.screenshot({ path: 'debug.png', fullPage: true });
       console.error(`❌ Navigation error. Current URL: ${currentUrl}`);
-      return res.status(500).json({ error: 'Navigation failed', details: currentUrl });
+      await browser.close();
+      return res.status(500).json({ error: 'Navigation failed', url: currentUrl });
     }
 
     const currentUrl = await page.url();
     console.log(`✅ Page loaded: ${currentUrl}`);
-    await page.screenshot({ path: 'debug.png', fullPage: true });
 
+    // Screenshot only if redirected
     if (currentUrl.includes('/login') || currentUrl.includes('checkpoint')) {
+      console.warn('🔐 Redirected to login/checkpoint page. Taking screenshot for debug...');
+      await page.screenshot({ path: 'debug.png', fullPage: true });
       await browser.close();
-      return res.status(401).json({ error: 'Redirected to login. li_at may be expired.', url: currentUrl });
+      return res.status(401).json({
+        error: 'Redirected to login. li_at may be expired or blocked.',
+        url: currentUrl
+      });
     }
 
-    // 🔧 Dummy scraped data (replace with real scraping logic)
+    // ✅ Page loaded successfully — add your scraping logic here
     const leads = [
       { name: 'John Doe', title: 'Marketing Manager', location: 'New York' },
       { name: 'Jane Smith', title: 'Digital Strategist', location: 'San Francisco' }
@@ -72,12 +77,17 @@ app.get('/scrape', async (req, res) => {
   }
 });
 
-// 📸 View Puppeteer's screenshot for debugging
+// Debug route for screenshot
 app.get('/debug', (req, res) => {
-  res.sendFile(__dirname + '/debug.png');
+  const screenshotPath = __dirname + '/debug.png';
+  if (fs.existsSync(screenshotPath)) {
+    res.sendFile(screenshotPath);
+  } else {
+    res.status(404).send('❌ Screenshot not available. Make sure a screenshot was taken.');
+  }
 });
 
-// Start server
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Scraper API running on port ${PORT}`);
