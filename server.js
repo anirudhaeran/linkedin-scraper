@@ -39,7 +39,7 @@ app.get('/scrape', async (req, res) => {
     try {
       await page.goto(`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(query)}`, {
         waitUntil: 'networkidle2',
-        timeout: 90000
+        timeout: 60000
       });
     } catch (err) {
       const currentUrl = await page.url();
