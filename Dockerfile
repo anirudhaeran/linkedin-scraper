@@ -1,7 +1,6 @@
-# Use official Node image
 FROM node:18-slim
 
-# Install necessary system dependencies
+# Install missing libraries for Chromium to work properly
 RUN apt-get update && apt-get install -y \
     wget \
     ca-certificates \
@@ -18,21 +17,17 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    xdg-utils \
-    libexpat1 \
     libxshmfence1 \
+    libxkbcommon0 \
+    libx11-xcb1 \
+    xdg-utils \
     --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy project files
 COPY package*.json ./
 RUN npm install
 COPY . .
 
-# Expose port
 EXPOSE 3000
-
-# Run app
 CMD ["node", "server.js"]
