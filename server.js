@@ -1,3 +1,13 @@
+const express = require('express');
+const puppeteer = require('puppeteer');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('✅ LinkedIn Scraper is running! Use /scrape?q=your-query');
+});
+
 app.get('/scrape', async (req, res) => {
   const query = req.query.q;
   if (!query) {
@@ -14,7 +24,7 @@ app.get('/scrape', async (req, res) => {
   try {
     const page = await browser.newPage();
 
-    // Set LinkedIn cookie
+    // Set LinkedIn session cookie
     console.log(`🍪 Setting li_at cookie`);
     await page.setCookie({
       name: 'li_at',
@@ -22,17 +32,24 @@ app.get('/scrape', async (req, res) => {
       domain: '.linkedin.com'
     });
 
-    console.log(`🌐 Navigating to LinkedIn search page`);
+    console.log(`🌐 Navigating to LinkedIn search page...`);
     await page.goto(`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(query)}`, {
       waitUntil: 'networkidle2',
       timeout: 60000
     });
 
-    console.log(`✅ Page loaded: ${await page.url()}`);
+    const currentUrl = await page.url();
+    console.log(`✅ Page loaded: ${currentUrl}`);
 
+    // If redirected to login, throw error
+    if (currentUrl.includes('/login') || currentUrl.includes('checkpoint')) {
+      throw new Error('Invalid or expired li_at cookie. Redirected to login.');
+    }
+
+    console.log(`🕵️ Waiting for search results...`);
     await page.waitForSelector('.reusable-search__result-container', { timeout: 15000 });
 
-    console.log(`🔍 Extracting leads`);
+    console.log(`📄 Extracting leads...`);
     const leads = await page.evaluate(() => {
       const results = [];
       const cards = document.querySelectorAll('.reusable-search__result-container');
@@ -46,12 +63,11 @@ app.get('/scrape', async (req, res) => {
           results.push({ name, occupation, location, profile });
         }
       });
-      return results.slice(0, 5);
+      return results.slice(0, 5); // limit to 5 results
     });
 
+    console.log(`✅ Scraping complete. Found ${leads.length} leads.`);
     await browser.close();
-    console.log(`✅ Scraping complete`);
-
     return res.json({ query, leads });
 
   } catch (err) {
@@ -59,4 +75,8 @@ app.get('/scrape', async (req, res) => {
     console.error(`❌ Error: ${err.message}`);
     return res.status(500).json({ error: 'Scraping failed', details: err.message });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Scraper API running on port ${PORT}`);
 });
