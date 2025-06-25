@@ -1,6 +1,6 @@
 FROM node:18-slim
 
-# Install all required dependencies for Puppeteer to launch full Chromium
+# Install all required libraries to run Chromium (headless) in Docker
 RUN apt-get update && apt-get install -y \
     wget \
     ca-certificates \
@@ -25,6 +25,11 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libx11-6 \
     libx11-data \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libcairo2 \
+    libxft2 \
+    libharfbuzz0b \
     xdg-utils \
     --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
