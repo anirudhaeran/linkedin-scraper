@@ -17,9 +17,17 @@ app.get('/scrape', async (req, res) => {
   console.log(`🔍 Starting scrape for query: ${query}`);
 
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+  headless: true,
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--disable-software-rasterizer',
+    '--single-process',
+    '--no-zygote'
+  ]
+});
 
   try {
     const page = await browser.newPage();
@@ -32,11 +40,17 @@ app.get('/scrape', async (req, res) => {
       domain: '.linkedin.com'
     });
 
-    console.log(`🌐 Navigating to LinkedIn search page...`);
-    await page.goto(`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(query)}`, {
-      waitUntil: 'networkidle2',
-      timeout: 60000
-    });
+    try {
+  console.log(`🌐 Navigating to LinkedIn...`);
+  await page.goto(`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(query)}`, {
+    waitUntil: 'networkidle2',
+    timeout: 90000 // ⏰ Increased to 90 seconds
+  });
+} catch (navErr) {
+  const currentUrl = await page.url();
+  console.error(`❌ Navigation error. Current URL: ${currentUrl}`);
+  throw new Error('LinkedIn did not load. Possible login redirect or slow connection.');
+}
 
     const currentUrl = await page.url();
     console.log(`✅ Page loaded: ${currentUrl}`);
